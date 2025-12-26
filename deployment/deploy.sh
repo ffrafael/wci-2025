@@ -112,7 +112,7 @@ function create_bq_tables(){
     --table \
     --description="BigQuery table for WCI" \
     $GOOGLE_CLOUD_PROJECT:$BQ_DATASET_NAME.leads \
-    protocol:STRING,phone:STRING,timestamp:TIMESTAMP
+    protocol:STRING,phone:STRING,email:STRING,timestamp:TIMESTAMP
     echo
 }
 function show_endpoints(){

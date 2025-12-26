@@ -31,6 +31,13 @@ from data_sources.factory import DataSourceFactory
 
 data_source = DataSourceFactory(os.environ.get("DATA_SOURCE_TYPE")).get()
 
+EMAIL_REGEX = re.compile(
+    r"\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b"
+)
+
+def extract_email_from_message(message: str) -> Optional[str]:
+    match = EMAIL_REGEX.search(message)
+    return match.group(0).lower() if match else None
 
 def generate_a_protocol() -> Optional[str]:
     """
@@ -93,13 +100,25 @@ def get_protocol_by_phone(message: str, sender: str, receiver: str) -> Optional[
         # Updates the phone_number by protcol
         data_source.save_phone_protocol_match(sender, protocol)
 
+        # Saves a copy of protocol message
+        data_source.save_message(message, sender, receiver)
+
         # Checks if ECL is enabled
         if os.environ.get("ECL_ENABLED").lower() == "true":
             set_protocol_ecl_for_phone(protocol, sender)
 
-     # Saves a copy of the received message
+    # Saves a copy of the received message
     data_source.save_message(message, sender, receiver)
-        
+    
+    # Tries to extract email from message
+    email = extract_email_from_message(message)
+
+    if email:
+        data_source.update_lead_email(
+            phone=sender,
+            email=email
+        )
+
     # Returns the raw protocol
     return protocol
 

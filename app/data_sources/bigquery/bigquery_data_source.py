@@ -169,3 +169,24 @@ class BigQueryDataSource(DataSource):
             else:
                 dict[key] = value
         return dict
+    
+    def update_lead_email(self, phone: str, email: str):
+        """
+        Updates lead email based on phone number
+        """
+    
+        query = f"""
+            UPDATE `{BQ_LEAD_TABLE}`
+            SET email = @email
+            WHERE phone = @phone
+        """
+    
+        job_config = bigquery.QueryJobConfig(
+            query_parameters=[
+                bigquery.ScalarQueryParameter("email", "STRING", email),
+                bigquery.ScalarQueryParameter("phone", "STRING", phone),
+            ]
+        )
+    
+        self._bq_client.query(query, job_config=job_config).result()
+

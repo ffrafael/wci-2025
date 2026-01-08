@@ -236,8 +236,8 @@ class BigQueryDataSource(DataSource):
                 bigquery.ScalarQueryParameter("protocol", "STRING", protocol),
                 bigquery.ScalarQueryParameter("phone", "STRING", phone),
                 bigquery.ScalarQueryParameter("email", "STRING", email),
-                bigquery.ScalarQueryParameter("timestamp", "FLOAT", now),
-                bigquery.ScalarQueryParameter("updated_at", "FLOAT", now),
+                bigquery.ScalarQueryParameter("timestamp", "TIMESTAMP", now),
+                bigquery.ScalarQueryParameter("updated_at", "TIMESTAMP", now),
                 bigquery.ScalarQueryParameter("name", "STRING", name),
             ]
         )

@@ -101,9 +101,6 @@ def get_protocol_by_phone(message: str, sender: str, name: str, receiver: str) -
         # Updates the phone_number by protocol
         data_source.save_phone_protocol_match(sender, protocol, name)
 
-        # Saves a copy of protocol message
-        data_source.save_message(message, sender, receiver)
-
         # Checks if ECL is enabled
         if os.environ.get("ECL_ENABLED").lower() == "true":
             set_protocol_ecl_for_phone(protocol, sender)

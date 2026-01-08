@@ -229,7 +229,7 @@ class BigQueryDataSource(DataSource):
             )
         """
     
-        now = datetime.datetime.now().timestamp()
+        now = datetime.datetime.utcnow()
     
         insert_job_config = bigquery.QueryJobConfig(
             query_parameters=[

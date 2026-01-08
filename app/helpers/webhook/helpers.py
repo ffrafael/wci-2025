@@ -73,13 +73,14 @@ def save_protocol(
     return 200
 
 
-def get_protocol_by_phone(message: str, sender: str, receiver: str) -> Optional[str]:
+def get_protocol_by_phone(message: str, sender: str, name: str, receiver: str) -> Optional[str]:
     """
     Helper function for getting a generated protocol for a given sender.
 
     Parameters:
        message (str)
        sender (str)
+       name (str)
        receiver (str)
 
     Output:
@@ -97,8 +98,8 @@ def get_protocol_by_phone(message: str, sender: str, receiver: str) -> Optional[
         # Captures the second group matched
         protocol = has_protocol.group(2)
 
-        # Updates the phone_number by protcol
-        data_source.save_phone_protocol_match(sender, protocol)
+        # Updates the phone_number by protocol
+        data_source.save_phone_protocol_match(sender, protocol, name)
 
         # Saves a copy of protocol message
         data_source.save_message(message, sender, receiver)

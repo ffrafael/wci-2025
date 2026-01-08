@@ -67,7 +67,7 @@ class BigQueryDataSource(DataSource):
         if not errors == []:
             raise Exception("Error while creating pending-lead: {}".format(errors))
 
-    def save_phone_protocol_match(self, phone: str, protocol: str):
+    def save_phone_protocol_match(self, phone: str, protocol: str, name: str):
         """
         Saves a protocol matched to a number (phone)
 
@@ -80,6 +80,7 @@ class BigQueryDataSource(DataSource):
                 "phone": phone,
                 "protocol": protocol,
                 "timestamp": datetime.datetime.now().timestamp(),
+                "name": name
             }
         ]
 
@@ -172,21 +173,74 @@ class BigQueryDataSource(DataSource):
     
     def update_lead_email(self, phone: str, email: str):
         """
-        Updates lead email based on phone number
+        Inserts a new lead version with email,
+        reusing the protocol from the latest lead.
+        Avoids UPDATE over streaming buffer.
         """
     
-        query = f"""
-            UPDATE `{BQ_LEAD_TABLE}`
-            SET email = @email
+        # 1️⃣ Buscar lead mais recente pelo telefone
+        select_query = f"""
+            SELECT
+                protocol, name
+            FROM `{BQ_LEAD_TABLE}`
             WHERE phone = @phone
+            QUALIFY
+                ROW_NUMBER() OVER (
+                    PARTITION BY phone
+                    ORDER BY COALESCE(updated_at, timestamp) DESC
+                ) = 1
         """
     
-        job_config = bigquery.QueryJobConfig(
+        select_job = self._bq_client.query(
+            select_query,
+            job_config=bigquery.QueryJobConfig(
+                query_parameters=[
+                    bigquery.ScalarQueryParameter("phone", "STRING", phone),
+                ]
+            )
+        )
+    
+        rows = list(select_job.result())
+    
+        # 2️⃣ Se não encontrou lead, não faz insert
+        if not rows:
+            return
+    
+        protocol = rows[0]["protocol"]
+        name = rows[0]["name"]
+    
+        # 3️⃣ Inserir nova versão do lead com email
+        insert_query = f"""
+            INSERT INTO `{BQ_LEAD_TABLE}` (
+                protocol,
+                phone,
+                email,
+                timestamp,
+                updated_at,
+                name
+            )
+            VALUES (
+                @protocol,
+                @phone,
+                @email,
+                @timestamp,
+                @updated_at,
+                @name
+            )
+        """
+    
+        now = datetime.datetime.now().timestamp()
+    
+        insert_job_config = bigquery.QueryJobConfig(
             query_parameters=[
-                bigquery.ScalarQueryParameter("email", "STRING", email),
+                bigquery.ScalarQueryParameter("protocol", "STRING", protocol),
                 bigquery.ScalarQueryParameter("phone", "STRING", phone),
+                bigquery.ScalarQueryParameter("email", "STRING", email),
+                bigquery.ScalarQueryParameter("timestamp", "FLOAT", now),
+                bigquery.ScalarQueryParameter("updated_at", "FLOAT", now),
+                bigquery.ScalarQueryParameter("name", "STRING", name),
             ]
         )
     
-        self._bq_client.query(query, job_config=job_config).result()
+        self._bq_client.query(insert_query, job_config=insert_job_config).result()
 

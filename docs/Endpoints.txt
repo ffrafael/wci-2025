@@ -1,0 +1,5 @@
+NEXT STEPS: To finalize, set your account's webhook to
+Callback URL: https://wci-1045187835055.us-central1.run.app/webhook-wci
+Verify token: WCI_Afya_2025
+Lead URL: https://wci-1045187835055.us-central1.run.app/webhook
+Message Ads URL: https://wci-1045187835055.us-central1.run.app/webhook-ctm

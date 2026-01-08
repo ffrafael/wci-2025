@@ -44,5 +44,6 @@ class WhatsAppPartner(Partner):
                         get_protocol_by_phone(
                             change["value"]["messages"][0]["text"]["body"],
                             change["value"]["contacts"][0]["wa_id"],
+                            change["value"]["contacts"][0]["profile"]["name"],
                             change["value"]["metadata"]["display_phone_number"],
                         )
